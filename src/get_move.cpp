@@ -1,6 +1,6 @@
 #include "models/cell.hpp"
-#include "monte_carlo/monte_carlo_tree_search.hpp"
-// #include "monte_carlo_dsu/monte_carlo_tree_search.hpp"
+// #include "monte_carlo/monte_carlo_tree_search.hpp"
+#include "monte_carlo_dsu/monte_carlo_tree_search.hpp"
 #include "utils/dijkstra_board.hpp"
 
 #include <iostream>
