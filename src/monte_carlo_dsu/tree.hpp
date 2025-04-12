@@ -11,6 +11,7 @@ typedef struct NodeData {
   unsigned int si;
   unsigned int ni;
 
+
   double h;
 } NodeData;
 
@@ -19,7 +20,7 @@ public:
   NodeData data;
   std::map<Cell, MCTreeNode *> children;
   std::set<Cell> unexplored_moves;
-  bool decisive_move;
+  short terminal_winner;
 
   MCTreeNode() {
     children = std::map<Cell, MCTreeNode *>();
@@ -40,22 +41,13 @@ public:
     node->data.si = 0;
     node->data.ni = 0;
     node->data.h = heuristic;
-    node->decisive_move = false;
+    node->terminal_winner = 0;
 
     node->unexplored_moves.insert(valid_moves.begin(), valid_moves.end());
 
     return node;
   }
 
-  static MCTreeNode *new_decisive_tree_node(/* Cell c */) {
-    auto node = new MCTreeNode();
-    node->data.si = 1;
-    node->data.ni = 1;
-    node->data.h = 0;
-    node->decisive_move = true;
-
-    return node;
-  }
 
   bool has_been_explored(Cell c) {
     return this->children.find(c) != this->children.end();

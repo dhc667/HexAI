@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../models/board.hpp"
-#include "../utils/dijkstra_board.hpp"
+#include "dsu_board.hpp"
 #include "tree.hpp"
 #include <algorithm>
 #include <chrono>
@@ -18,7 +18,7 @@
 
 class MCTSearch_Tree {
 private:
-  Board board;
+  DSUBoard board;
   MCTreeNode *root;
   double c;
   std::set<Cell> valid_moves;
@@ -53,10 +53,11 @@ public:
 
 
     while (std::chrono::steady_clock::now() < end_time) {
+      // std::cerr << "Filling tree" << std::endl;
       visit(root, this->player_id);
 
       #ifdef DEBUG
-      std::cerr << "Root: ni: " << root->data.ni << ", si: " << root->data.si << std::endl;
+      // std::cerr << "Root: ni: " << root->data.ni << ", si: " << root->data.si << std::endl;
       #endif // DEBUG
     }
   }
@@ -78,8 +79,8 @@ public:
   short visit(MCTreeNode *node, short player_id) {
     node->data.ni += 1;
 
-    if (node->decisive_move) {
-      node->data.si += node_score(player_id, player_id);
+    if (node->terminal_winner != 0) {
+      node->data.si += node_score(node->terminal_winner, player_id);
       return player_id;
     }
     auto enemy_id = enemy_of(player_id);
@@ -96,7 +97,7 @@ public:
       auto winner_id = playout(new_child, enemy_id);
 
       this->valid_moves.insert(random_move);
-      this->board.undo_move(random_move);
+      this->board.undo_last_move();
 
       node->data.si += node_score(player_id, winner_id);
       return winner_id;
@@ -110,7 +111,7 @@ public:
       auto winner_id = visit(node->children[move], enemy_id);
 
       this->valid_moves.insert(move);
-      this->board.undo_move(move);
+      this->board.undo_last_move();
 
       node->data.si += node_score(player_id, winner_id);
       return winner_id;
@@ -121,38 +122,40 @@ public:
   short playout(MCTreeNode *start, short player_id) {
     std::vector<Cell> moves_made;
     auto current_player = player_id;
+    short winner = board.get_winner();
 
-    while (!decisive_move_can_be_made(current_player)) {
+    while (winner == 0) {
       if (this->valid_moves.empty()) {
-        std::cerr << "No valid moves and decisive move cannot be made" << std::endl;
         std::cerr << board.to_string() << std::endl;
-        for (auto it = moves_made.end() - 1; it != moves_made.begin(); it--) {
-          std::cerr << it->row << ", " << it->col << std::endl;
-          board.undo_move(*it);
-          std::cerr << board.to_string() << std::endl;
+
+        for (int i = 0; i < moves_made.size(); i++) {
+          this->board.undo_last_move();
+          std::cerr << this->board.to_string();
         }
 
         throw std::exception();
       }
+
       auto random_move = pick_random_move(this->valid_moves);
       board.make_move(random_move, current_player);
       this->valid_moves.erase(random_move);
       moves_made.push_back(random_move);
+      winner = this->board.get_winner();
       current_player = enemy_of(current_player);
     }
 
-    for (auto m : moves_made) {
-      this->board.undo_move(m);
-      this->valid_moves.insert(m);
+    for (int i = moves_made.size() - 1; i >= 0; i--) {
+      this->board.undo_last_move();
+      this->valid_moves.insert(moves_made[i]);
     }
 
-    auto score = node_score(player_id, current_player);
+    auto score = node_score(player_id, winner);
 
     start->data.ni = 1;
     start->data.si += score;
 
-    if (moves_made.empty()) {
-      start->decisive_move = true;
+    if (moves_made.size() == 0) {
+      start->terminal_winner = winner;
     }
 
 
@@ -167,10 +170,6 @@ public:
     if (!player_score_switching)
       return winner_id == this->player_id ? 1 : 0;
     return current_player == winner_id ? 1 : 0;
-  }
-
-  bool decisive_move_can_be_made(short player_id) {
-    return get_decisive_move(this->board, player_id).col != -1;
   }
 
   static Cell pick_random_move(const std::set<Cell> &valid_moves) {

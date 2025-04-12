@@ -3,6 +3,11 @@
 #include "../models/cell.hpp"
 #include "tree.hpp"
 #include "tree_search.hpp"
+#include "../utils/dijkstra_board.hpp"
+
+#ifdef DEBUG
+#include <iostream>
+#endif // DEBUG
 
 double get_score(NodeData data) {
   // return static_cast<float>(data.si) / data.ni;
@@ -18,6 +23,9 @@ Cell MCTS_get_move(short **_board, unsigned int board_size, short player_id,
   }
   MCTSearch_Tree tree(board, player_id, c, false);
 
+  #ifdef DEBUG
+  std::cerr << "Filling tree" << std::endl;
+  #endif // DEBUG
   tree.fill_tree(milliseconds);
   auto moves = tree.get_moves();
 

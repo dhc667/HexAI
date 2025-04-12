@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-// #define DEBUG 1
-
 #if DEBUG
 #include <iostream>
 #include <stdexcept>
@@ -14,7 +12,6 @@
 class Board {
 private:
   std::vector<std::vector<short>> board;
-  std::string hash;
 
   short &operator[](const Cell &c) {
 #if DEBUG
@@ -25,17 +22,6 @@ private:
 
     return this->board[c.row][c.col];
   }
-
-  // short &operator[](int id) {
-  // #if DEBUG
-  //   if (!is_valid_id(id)) {
-  //     throw std::out_of_range("Invalid node id");
-  //   }
-  // #endif
-
-  //   Cell c = from_node_id(id);
-  //   return (*this)[c];
-  // }
 
 public:
   Board(std::vector<std::vector<short>> &_board) { this->board = _board; }
@@ -48,15 +34,7 @@ public:
       }
     }
 
-    this->hash.resize(board_size * board_size);
-    for (int i = 0; i < board_size; i++) {
-      for (int j = 0; j < board_size; j++) {
-        Cell c = {i, j};
-        this->hash[to_node_id(c)] = (*this)[c] == 1   ? '1'
-                                    : (*this)[c] == 2 ? '2'
-                                                      : '0';
-      }
-    }
+
   }
 
   Board copy() {
@@ -188,10 +166,11 @@ public:
     answ.row = node_id / this->board.size();
     answ.col = node_id % this->board.size();
 
-// #if DEBUG
-//     std::cerr << "from_node_id: " << node_id << " -> " << answ.row << ", "
-//               << answ.col << std::endl;
-// #endif
+    // #if DEBUG
+    //     std::cerr << "from_node_id: " << node_id << " -> " << answ.row << ",
+    //     "
+    //               << answ.col << std::endl;
+    // #endif
 
     return answ;
   }
@@ -204,7 +183,7 @@ public:
       for (int j = 0; j < this->board.size(); j++) {
         str += std::to_string((*this)[{i, j}]) + " ";
       }
-      indent ++;
+      indent++;
       str += "\n";
     }
     return str;
@@ -240,8 +219,6 @@ public:
 #endif
 
     (*this)[c] = player_id;
-    auto cell_id = to_node_id(c);
-    this->hash[cell_id] = player_id == 1 ? '1' : '2';
   }
 
   void undo_move(Cell c) {
@@ -252,11 +229,10 @@ public:
 #endif
 
     (*this)[c] = 0;
-    auto cell_id = to_node_id(c);
-    this->hash[cell_id] = '0';
   }
 
-  std::string get_hash() const { return std::string(this->hash); }
+
+  short get_value_at(Cell c) const { return (*this)[c]; }
 
   short operator[](Cell c) const {
 #if DEBUG
