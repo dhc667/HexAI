@@ -62,7 +62,7 @@ def get_move(board, player_id):
         tuple[int, int]: The row and column of the move.
     """
     board_size = len(board)
-    milliseconds = 2000  # Example time limit in milliseconds
+    milliseconds = 8000
     return call_get_move(board, board_size, player_id, milliseconds)
 
 if __name__ == "__main__":
