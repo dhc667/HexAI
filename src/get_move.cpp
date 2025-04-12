@@ -9,7 +9,7 @@
 extern "C" {
 Cell get_move(short **board, unsigned int board_size, short player_id,
               unsigned int milliseconds) {
-  return MCTS_get_move(board, board_size, player_id, milliseconds, 2);
+  return MCTS_get_move(board, board_size, player_id, milliseconds, 1.4142);
 }
 
 bool game_over(short **_board, unsigned int board_size) {
